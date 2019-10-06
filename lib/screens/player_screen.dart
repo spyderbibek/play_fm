@@ -1,10 +1,11 @@
+import 'package:cloud_audio_player/cloud_player_state.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:play_fm/model/radio_model.dart';
-import 'package:audioplayer/audioplayer.dart';
 import 'package:volume/volume.dart';
+import 'package:cloud_audio_player/cloud_audio_player.dart';
 
-enum PlayerState { stopped, playing, paused }
+enum PlayerState { STOPPED, PLAYING, ERROR, LOADING }
 
 class PlayerScreen extends StatefulWidget {
   PlayerScreen({@required this.radioStations, @required this.index});
@@ -18,16 +19,9 @@ class PlayerScreen extends StatefulWidget {
 }
 
 class _PlayerScreenState extends State<PlayerScreen> {
-  String name = "Radio Kantipur - 96.1 MHz";
-
-  String image =
-      "https://dl.dropboxusercontent.com/s/w0n053n9a48zsmw/radio_kantipur.jpg";
-
-  String link = "http://kantipur-stream.softnep.com:7248/stream";
-  AudioPlayer audioPlayer = new AudioPlayer();
   PlayerState playerState;
-  double _volumeValue = 10.0;
   int maxVol, currentVol;
+  CloudAudioPlayer _player;
 
   @override
   void initState() {
@@ -36,16 +30,51 @@ class _PlayerScreenState extends State<PlayerScreen> {
     initPlatformState();
     updateVolumes();
 
+    _player = CloudAudioPlayer();
+    _player.addListeners(
+      statusListener: _onStatusChanged,
+    );
+
     widget.radioStations[widget.index].link.isNotEmpty
-        ? play(widget.radioStations[widget.index].link)
+        ? _onLoad(widget.radioStations[widget.index].link)
         : null;
+  }
+
+  void _onLoad(String url) {
+    _player.play(url);
+    setState(() => playerState = PlayerState.PLAYING);
+  }
+
+  void _onStop() {
+    _player.stop();
+    setState(() => playerState = PlayerState.STOPPED);
+  }
+
+  //================== PLAYER EVENT ================
+  //Player Event
+  _onStatusChanged(CloudPlayerState status) {
+    print(status);
+    setState(() {
+      //_statusText = status.toString();
+      if (status == CloudPlayerState.STOPPED) {
+        setState(() => playerState = PlayerState.STOPPED);
+      } else if (status == CloudPlayerState.PLAYING) {
+        setState(() => playerState = PlayerState.PLAYING);
+      } else if (status == CloudPlayerState.ERROR) {
+        setState(() => playerState = PlayerState.ERROR);
+      } else if (status == CloudPlayerState.LOADING) {
+        setState(() => playerState = PlayerState.LOADING);
+      }
+    });
+    print("after $status");
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    audioPlayer.stop();
+    //audioPlayer.stop();
+    _player.stop();
   }
 
   Future<void> initPlatformState() async {
@@ -62,24 +91,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     // get Current Volume
     currentVol = await Volume.getVol;
     setState(() {});
-  }
-
-  Future<void> play(String url) async {
-    await audioPlayer.play(url);
-    setState(() => playerState = PlayerState.playing);
-  }
-
-  Future<void> pause() async {
-    await audioPlayer.pause();
-
-    setState(() => playerState = PlayerState.paused);
-  }
-
-  Future<void> stop() async {
-    await audioPlayer.stop();
-    setState(() {
-      playerState = PlayerState.stopped;
-    });
   }
 
   RadioModel _getRadio(int currentIndex) {
@@ -110,7 +121,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   decoration: BoxDecoration(
                       image: DecorationImage(
                           image: NetworkImage(_getRadio(widget.index).image),
-                          fit: BoxFit.cover)),
+                          fit: BoxFit.fill)),
                 ),
                 Container(
                   height: 500.0,
@@ -133,6 +144,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         children: <Widget>[
                           GestureDetector(
                             onTap: () {
+                              _player.stop();
                               Navigator.pop(context);
                             },
                             child: Container(
@@ -142,12 +154,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   borderRadius: BorderRadius.circular(50.0)),
                             ),
                           ),
-//                          Column(
-//                            children: <Widget>[
-//                              Text(name),
-//                              Text("PLAYLIST"),
-//                            ],
-//                          ),
                           Icon(FontAwesomeIcons.plus),
                         ],
                       ),
@@ -160,7 +166,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             fontSize: 32.0),
                       ),
                       Text(
-                        "Buffering",
+                        playerState
+                            .toString()
+                            .substring(playerState.toString().indexOf('.') + 1),
                         style: TextStyle(color: Colors.grey, fontSize: 15.0),
                       ),
                       SizedBox(
@@ -180,15 +188,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
             children: <Widget>[
               FlatButton(
                 onPressed: () {
-                  stop();
-                  play(_getRadio(widget.index - 1).link);
+                  _onStop();
+                  _onLoad(_getRadio(widget.index - 1).link);
                 },
-//                onPressed: () => playerState == PlayerState.playing
-//                    ? () {
-//                        stop();
-//                        play(_getRadio(widget.index - 1).link);
-//                      }
-//                    : null,
                 child: Icon(
                   Icons.fast_rewind,
                   size: 42.0,
@@ -203,13 +205,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   borderRadius: BorderRadius.circular(50.0),
                 ),
                 child: FlatButton(
-                  onPressed: () => playerState == PlayerState.paused ||
-                          playerState == PlayerState.stopped
-                      ? play(_getRadio(widget.index).link)
-                      : stop(),
+                  onPressed: () => playerState == PlayerState.STOPPED
+                      ? _onLoad(_getRadio(widget.index).link)
+                      : _onStop(),
                   child: Icon(
-                    playerState == PlayerState.paused ||
-                            playerState == PlayerState.stopped
+                    playerState == PlayerState.STOPPED
                         ? Icons.play_arrow
                         : Icons.stop,
                     size: 60.0,
@@ -221,8 +221,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
               ),
               FlatButton(
                 onPressed: () {
-                  stop();
-                  play(_getRadio(widget.index + 1).link);
+                  _onStop();
+                  _onLoad(_getRadio(widget.index + 1).link);
                 },
 //                onPressed: playerState == PlayerState.playing
 //                    ? () {
@@ -238,40 +238,40 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ],
           ),
           Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: <Widget>[
-              Icon(
-                Icons.volume_down,
-                size: 15.0,
-              ),
-              Slider(
-                min: 0,
-                divisions: maxVol,
-                max: maxVol / 1.0,
-                onChanged: (double value) {
-                  setState(() {
-                    setVol(value.toInt());
-                    updateVolumes();
-                  });
-                },
-                value: currentVol / 1.0,
-                activeColor: Colors.pink,
-              ),
-              Icon(
-                Icons.volume_up,
-                size: 15.0,
-              ),
-            ],
+          Slider(
+            min: 0,
+            max: maxVol / 1.0,
+            onChanged: (double value) {
+              setState(() {
+                setVol(value.toInt());
+                updateVolumes();
+              });
+            },
+            value: currentVol / 1.0,
+            activeColor: Colors.pink,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Icon(
+                  Icons.volume_down,
+                  size: 15.0,
+                ),
+                Icon(
+                  Icons.volume_up,
+                  size: 15.0,
+                ),
+              ],
+            ),
           ),
           Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Icon(Icons.alarm),
-              FlatButton(
-                  onPressed: () => print(audioPlayer.state.toString()),
-                  child: Icon(Icons.add_circle)),
+              FlatButton(onPressed: () {}, child: Icon(Icons.add_circle)),
               Icon(Icons.favorite),
               Icon(Icons.settings),
             ],
