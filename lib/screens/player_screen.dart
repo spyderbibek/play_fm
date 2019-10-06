@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:play_fm/model/radio_model.dart';
 import 'package:audioplayer/audioplayer.dart';
+import 'package:volume/volume.dart';
 
 enum PlayerState { stopped, playing, paused }
 
@@ -25,11 +26,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
   String link = "http://kantipur-stream.softnep.com:7248/stream";
   AudioPlayer audioPlayer = new AudioPlayer();
   PlayerState playerState;
+  double _volumeValue = 10.0;
+  int maxVol, currentVol;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    initPlatformState();
+    updateVolumes();
+
+    widget.radioStations[widget.index].link.isNotEmpty
+        ? play(widget.radioStations[widget.index].link)
+        : null;
   }
 
   @override
@@ -39,6 +48,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
     audioPlayer.stop();
   }
 
+  Future<void> initPlatformState() async {
+    await Volume.controlVolume(AudioManager.STREAM_MUSIC);
+  }
+
+  setVol(int i) async {
+    await Volume.setVol(i);
+  }
+
+  updateVolumes() async {
+    // get Max Volume
+    maxVol = await Volume.getMaxVol;
+    // get Current Volume
+    currentVol = await Volume.getVol;
+    setState(() {});
+  }
+
   Future<void> play(String url) async {
     await audioPlayer.play(url);
     setState(() => playerState = PlayerState.playing);
@@ -46,6 +71,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> pause() async {
     await audioPlayer.pause();
+
     setState(() => playerState = PlayerState.paused);
   }
 
@@ -62,7 +88,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (currentIndex > widget.radioStations.length - 1) {
       currentIndex = 0;
     } else if (currentIndex < 0) {
-      currentIndex = widget.radioStations.length;
+      currentIndex = widget.radioStations.length - 1;
     }
     widget.index = currentIndex;
     RadioModel radioData = widget.radioStations[currentIndex];
@@ -133,6 +159,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             fontWeight: FontWeight.bold,
                             fontSize: 32.0),
                       ),
+                      Text(
+                        "Buffering",
+                        style: TextStyle(color: Colors.grey, fontSize: 15.0),
+                      ),
                       SizedBox(
                         height: 16.0,
                       ),
@@ -145,21 +175,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
           SizedBox(
             height: 8.0,
           ),
-          Slider(
-            onChanged: (double value) {},
-            value: 0.2,
-            activeColor: Colors.pink,
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               FlatButton(
-                onPressed: () => playerState == PlayerState.playing
-                    ? () {
-                        stop();
-                        play(_getRadio(widget.index - 1).link);
-                      }
-                    : null,
+                onPressed: () {
+                  stop();
+                  play(_getRadio(widget.index - 1).link);
+                },
+//                onPressed: () => playerState == PlayerState.playing
+//                    ? () {
+//                        stop();
+//                        play(_getRadio(widget.index - 1).link);
+//                      }
+//                    : null,
                 child: Icon(
                   Icons.fast_rewind,
                   size: 42.0,
@@ -191,12 +220,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 width: 52.0,
               ),
               FlatButton(
-                onPressed: playerState == PlayerState.playing
-                    ? () {
-                        stop();
-                        play(_getRadio(widget.index + 1).link);
-                      }
-                    : null,
+                onPressed: () {
+                  stop();
+                  play(_getRadio(widget.index + 1).link);
+                },
+//                onPressed: playerState == PlayerState.playing
+//                    ? () {
+//                        stop();
+//                        play(_getRadio(widget.index + 1).link);
+//                      }
+//                    : null,
                 child: Icon(
                   Icons.fast_forward,
                   size: 42.0,
@@ -206,10 +239,39 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
           Spacer(),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Icon(
+                Icons.volume_down,
+                size: 15.0,
+              ),
+              Slider(
+                min: 0,
+                divisions: maxVol,
+                max: maxVol / 1.0,
+                onChanged: (double value) {
+                  setState(() {
+                    setVol(value.toInt());
+                    updateVolumes();
+                  });
+                },
+                value: currentVol / 1.0,
+                activeColor: Colors.pink,
+              ),
+              Icon(
+                Icons.volume_up,
+                size: 15.0,
+              ),
+            ],
+          ),
+          Spacer(),
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
               Icon(Icons.alarm),
-              Icon(Icons.add_circle),
+              FlatButton(
+                  onPressed: () => print(audioPlayer.state.toString()),
+                  child: Icon(Icons.add_circle)),
               Icon(Icons.favorite),
               Icon(Icons.settings),
             ],

@@ -8,24 +8,24 @@ String radioModelToJson(List<RadioModel> data) =>
 
 class RadioModel {
   String name;
-  String image;
   String link;
+  String image;
 
   RadioModel({
     this.name,
-    this.image,
     this.link,
+    this.image,
   });
 
   factory RadioModel.fromJson(Map<String, dynamic> json) => RadioModel(
         name: json["name"],
-        image: json["image"],
         link: json["link"],
+        image: json["image"],
       );
 
   Map<String, dynamic> toJson() => {
         "name": name,
-        "image": image,
         "link": link,
+        "image": image,
       };
 }

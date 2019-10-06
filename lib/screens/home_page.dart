@@ -14,6 +14,7 @@ class _HomePageState extends State<HomePage> {
   Webservice webservice = Webservice();
   String searchText = "";
   String filter;
+  int totalStations;
   TextEditingController searchController = TextEditingController();
   List<RadioModel> _searchResult = [];
   List<RadioModel> _radioDetails = [];
@@ -131,7 +132,7 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            "32 stations, ",
+                            "$totalStations stations, ",
                             style:
                                 TextStyle(fontSize: 15.0, color: Colors.grey),
                           ),
@@ -150,6 +151,7 @@ class _HomePageState extends State<HomePage> {
                   future: webservice.fetchStations(),
                   builder: (context, snapshot) {
                     _radioDetails = snapshot.data ?? [];
+                    totalStations = _radioDetails.length;
                     if (!snapshot.hasData)
                       return Center(
                         child: CircularProgressIndicator(),
@@ -169,6 +171,7 @@ class _HomePageState extends State<HomePage> {
                               itemCount: _searchResult.length,
                               itemBuilder: (context, index) {
                                 RadioModel radio = _searchResult[index];
+                                totalStations = _searchResult.length;
                                 return RadioList(
                                   radio: radio,
                                   radioList: _searchResult,

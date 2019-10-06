@@ -13,14 +13,13 @@ class Webservice {
 //  }
 
   Future<List<RadioModel>> fetchStations() async {
-    var response = await http.get("http://bkshah.com.np/play_fm/data.json");
+    var response = await http.get("http://bkshah.com.np/play_fm/new.json");
 
     if (response.statusCode == 200) {
       final items = json.decode(response.body).cast<Map<String, dynamic>>();
       List<RadioModel> listOfStations = items.map<RadioModel>((json) {
         return RadioModel.fromJson(json);
       }).toList();
-
       return listOfStations;
     } else {
       throw Exception('Failed to load internet');
