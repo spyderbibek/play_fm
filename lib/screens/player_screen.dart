@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:play_fm/model/radio_model.dart';
 import 'package:volume/volume.dart';
 import 'package:cloud_audio_player/cloud_audio_player.dart';
+import 'dart:async';
 
 enum PlayerState { STOPPED, PLAYING, ERROR, LOADING }
 
@@ -270,10 +271,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Icon(Icons.alarm),
+              FlatButton(
+                  onPressed: () => setSleepTimer(1), child: Icon(Icons.alarm)),
               FlatButton(onPressed: () {}, child: Icon(Icons.add_circle)),
-              Icon(Icons.favorite),
-              Icon(Icons.settings),
+              FlatButton(onPressed: () {}, child: Icon(Icons.favorite)),
+              FlatButton(onPressed: () {}, child: Icon(Icons.settings)),
             ],
           ),
           SizedBox(
@@ -282,5 +284,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ],
       ),
     );
+  }
+
+  void setSleepTimer(int minutes) {
+    print("TIMER SET");
+    Timer(Duration(minutes: minutes), () {
+      print("STOPPING");
+      _onStop();
+    });
   }
 }

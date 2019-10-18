@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:play_fm/model/radio_model.dart';
 import 'package:play_fm/screens/player_screen.dart';
+import 'package:play_fm/utils/ThemeNotifier.dart';
 import 'package:play_fm/utils/constants.dart';
 import 'package:play_fm/utils/webservice.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -18,6 +21,9 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchController = TextEditingController();
   List<RadioModel> _searchResult = [];
   List<RadioModel> _radioDetails = [];
+  var _darkTheme = true;
+
+  bool _value1 = false;
 
   @override
   void initState() {
@@ -39,6 +45,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    _darkTheme = (themeNotifier.getTheme() == darkTheme);
+
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -161,7 +170,8 @@ class _HomePageState extends State<HomePage> {
                       margin: const EdgeInsets.only(top: 20.0),
                       padding: const EdgeInsets.only(top: 40.0),
                       decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
+                          //color: Colors.white.withOpacity(0.5),
+                          color: Color(0xFF5D16A2),
                           borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(50.0),
                               topRight: Radius.circular(50.0))),
@@ -179,14 +189,16 @@ class _HomePageState extends State<HomePage> {
                                 );
                               },
                             )
-                          : ListView.builder(itemBuilder: (context, index) {
-                              RadioModel radio = snapshot.data[index];
-                              return RadioList(
-                                radio: radio,
-                                radioList: _radioDetails,
-                                index: index,
-                              );
-                            }),
+                          : ListView.builder(
+                              itemCount: _radioDetails.length,
+                              itemBuilder: (context, index) {
+                                RadioModel radio = snapshot.data[index];
+                                return RadioList(
+                                  radio: radio,
+                                  radioList: _radioDetails,
+                                  index: index,
+                                );
+                              }),
                     ));
                   },
                 )
@@ -199,12 +211,39 @@ class _HomePageState extends State<HomePage> {
               child: Text("tab3"),
             ),
             Container(
-              child: Text("tab4"),
+              child: ListView(
+                children: <Widget>[
+                  ListTile(
+                    title: Text("Dark Theme"),
+                    contentPadding: const EdgeInsets.only(left: 16.0),
+                    trailing: Transform.scale(
+                      scale: 0.4,
+                      child: Switch(
+                        value: _darkTheme,
+                        onChanged: (val) {
+                          setState(() {
+                            _darkTheme = val;
+                          });
+                          onThemeChanged(val, themeNotifier);
+                        },
+                      ),
+                    ),
+                  )
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void onThemeChanged(bool value, ThemeNotifier themeNotifier) async {
+    (value)
+        ? themeNotifier.setTheme(customTheme)
+        : themeNotifier.setTheme(lightTheme);
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setBool('darkMode', value);
   }
 
   onSearchTextChanged(String text) async {
