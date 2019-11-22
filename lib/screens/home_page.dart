@@ -14,6 +14,7 @@ class _HomePageState extends State<HomePage> {
   Webservice webservice = Webservice();
   String searchText = "";
   String filter;
+  String imageUrl;
   int totalStations;
   TextEditingController searchController = TextEditingController();
   List<RadioModel> _searchResult = [];
@@ -39,6 +40,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    BorderRadiusGeometry radius = BorderRadius.only(
+      topLeft: Radius.circular(24.0),
+      topRight: Radius.circular(24.0),
+    );
+
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -55,13 +61,13 @@ class _HomePageState extends State<HomePage> {
             ),
             tabs: <Widget>[
               Tab(
-                text: "Search",
+                text: "Online FM",
               ),
               Tab(
-                text: "Top Station",
+                text: "News",
               ),
               Tab(
-                text: "Favorite",
+                text: "Extra",
               ),
               Tab(
                 text: "Setting",
@@ -69,144 +75,151 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
         ),
-        body: TabBarView(
+//            body: SlidingUpPanel(
+//              maxHeight: MediaQuery.of(context).size.height,
+//
+//              body: bodyTabBarView(),
+//            )
+        body: bodyTabBarView(),
+      ),
+    );
+  }
+
+  TabBarView bodyTabBarView() {
+    return TabBarView(
+      children: <Widget>[
+        Column(
           children: <Widget>[
-            Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(left: 60.0),
-                  child: Container(
-                    height: 50.0,
-                    decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.20),
-                        borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(30.0),
-                            bottomLeft: Radius.circular(30.0))),
-                    child: Row(
-                      children: <Widget>[
-                        SizedBox(
-                          width: 16.0,
-                        ),
-                        Icon(
-                          FontAwesomeIcons.search,
-                          size: 20.0,
-                        ),
-                        SizedBox(
-                          width: 8.0,
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            onSubmitted: (text) {
-                              setState(() {
-                                searchText = text;
-                                searchController.text = "";
-                              });
-                            },
-                            style: TextStyle(fontSize: 18.0),
-                            decoration: InputDecoration(
-                                hintText: 'Search Radio Station.......',
-                                hintStyle: TextStyle(color: Colors.grey),
-                                border: InputBorder.none),
-                          ),
-                        )
-                      ],
+            Padding(
+              padding: const EdgeInsets.only(left: 60.0),
+              child: Container(
+                height: 50.0,
+                decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.20),
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30.0),
+                        bottomLeft: Radius.circular(30.0))),
+                child: Row(
+                  children: <Widget>[
+                    SizedBox(
+                      width: 16.0,
                     ),
+                    Icon(
+                      FontAwesomeIcons.search,
+                      size: 20.0,
+                    ),
+                    SizedBox(
+                      width: 8.0,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        onSubmitted: (text) {
+                          setState(() {
+                            searchText = text;
+                            searchController.text = "";
+                          });
+                        },
+                        style: TextStyle(fontSize: 18.0),
+                        decoration: InputDecoration(
+                            hintText: 'Search Radio Station.......',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            border: InputBorder.none),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 20.0,
+            ),
+            //Search Text
+            Padding(
+              padding: const EdgeInsets.only(left: 25.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    searchText ?? " ",
+                    style:
+                        TextStyle(fontSize: 35.0, fontWeight: FontWeight.w800),
                   ),
-                ),
-                SizedBox(
-                  height: 20.0,
-                ),
-                //Search Text
-                Padding(
-                  padding: const EdgeInsets.only(left: 25.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        searchText ?? " ",
-                        style: TextStyle(
-                            fontSize: 35.0, fontWeight: FontWeight.w800),
+                        "$totalStations stations ",
+                        style: TextStyle(fontSize: 15.0, color: Colors.grey),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            "$totalStations stations, ",
-                            style:
-                                TextStyle(fontSize: 15.0, color: Colors.grey),
-                          ),
-                          Text(
-                            "5 favorites",
-                            style:
-                                TextStyle(fontSize: 15.0, color: Colors.grey),
-                          ),
-                        ],
-                      )
+//                      Text(
+//                        "5 favorites",
+//                        style: TextStyle(fontSize: 15.0, color: Colors.grey),
+//                      ),
                     ],
-                  ),
-                ),
+                  )
+                ],
+              ),
+            ),
 
-                FutureBuilder<List<RadioModel>>(
-                  future: webservice.fetchStations(),
-                  builder: (context, snapshot) {
-                    _radioDetails = snapshot.data ?? [];
-                    totalStations = _radioDetails.length;
-                    if (!snapshot.hasData)
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    return Flexible(
-                        child: Container(
-                      margin: const EdgeInsets.only(top: 20.0),
-                      padding: const EdgeInsets.only(top: 40.0),
-                      decoration: BoxDecoration(
-                          //color: Colors.white.withOpacity(0.5),
-                          color: Color(0xFF5D16A2),
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(50.0),
-                              topRight: Radius.circular(50.0))),
-                      child: _searchResult.length != 0 ||
-                              searchController.text.isNotEmpty
-                          ? ListView.builder(
-                              itemCount: _searchResult.length,
-                              itemBuilder: (context, index) {
-                                RadioModel radio = _searchResult[index];
-                                totalStations = _searchResult.length;
-                                return RadioList(
-                                  radio: radio,
-                                  radioList: _searchResult,
-                                  index: index,
-                                );
-                              },
-                            )
-                          : ListView.builder(
-                              itemCount: _radioDetails.length,
-                              itemBuilder: (context, index) {
-                                RadioModel radio = snapshot.data[index];
-                                return RadioList(
-                                  radio: radio,
-                                  radioList: _radioDetails,
-                                  index: index,
-                                );
-                              }),
-                    ));
-                  },
-                )
-              ],
-            ),
-            Container(
-              child: Text("tab2"),
-            ),
-            Container(
-              child: Text("tab3"),
-            ),
-            Container(
-              child: Text("tab4"),
-            ),
+            FutureBuilder<List<RadioModel>>(
+              future: webservice.fetchStations(),
+              builder: (context, snapshot) {
+                _radioDetails = snapshot.data ?? [];
+                totalStations = _radioDetails.length;
+                if (!snapshot.hasData)
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                return Flexible(
+                    child: Container(
+                  margin: const EdgeInsets.only(top: 20.0),
+                  padding: const EdgeInsets.only(top: 40.0),
+                  decoration: BoxDecoration(
+                      //color: Colors.white.withOpacity(0.5),
+                      color: Color(0xFFFFFFFF),
+                      borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(50.0),
+                          topRight: Radius.circular(50.0))),
+                  child: _searchResult.length != 0 ||
+                          searchController.text.isNotEmpty
+                      ? ListView.builder(
+                          itemCount: _searchResult.length,
+                          itemBuilder: (context, index) {
+                            RadioModel radio = _searchResult[index];
+                            totalStations = _searchResult.length;
+                            return RadioList(
+                              radio: radio,
+                              radioList: _searchResult,
+                              index: index,
+                            );
+                          },
+                        )
+                      : ListView.builder(
+                          itemCount: _radioDetails.length,
+                          itemBuilder: (context, index) {
+                            RadioModel radio = snapshot.data[index];
+                            return RadioList(
+                              radio: radio,
+                              radioList: _radioDetails,
+                              index: index,
+                            );
+                          }),
+                ));
+              },
+            )
           ],
         ),
-      ),
+        Container(
+          child: Text("tab2"),
+        ),
+        Container(
+          child: Text("tab3"),
+        ),
+        Container(
+          child: Text("tab4"),
+        ),
+      ],
     );
   }
 
@@ -251,20 +264,33 @@ class RadioList extends StatelessWidget {
         padding: const EdgeInsets.only(left: 25.0, bottom: 15.0, right: 25.0),
         child: Row(
           children: <Widget>[
-            CircleAvatar(
-              maxRadius: 30.0,
-              backgroundColor: Colors.red,
-              backgroundImage: NetworkImage(
-                radio.image,
-              ),
+            Container(
+              width: 60.0,
+              height: 60.0,
+              decoration: BoxDecoration(
+                  //shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.all(Radius.elliptical(10, 10)),
+                  border: Border.all(),
+                  image: DecorationImage(
+                      image: NetworkImage(radio.image), fit: BoxFit.fill)),
             ),
+//            CircleAvatar(
+//              maxRadius: 30.0,
+//              backgroundColor: Colors.red,
+//              backgroundImage: NetworkImage(
+//                radio.image,
+//              ),
+//            ),
             SizedBox(
               width: 20.0,
             ),
             Expanded(
               child: Text(
                 radio.name,
-                style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 20.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
               ),
             )
           ],
