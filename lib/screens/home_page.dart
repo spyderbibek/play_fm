@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:play_fm/model/news_model.dart';
 import 'package:play_fm/model/radio_model.dart';
 import 'package:play_fm/screens/player_screen.dart';
 import 'package:play_fm/utils/constants.dart';
 import 'package:play_fm/utils/webservice.dart';
+
+import 'my_web_view.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -211,8 +214,13 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         Container(
-          child: Text("tab2"),
-        ),
+            child: GridView.count(
+                crossAxisCount: 2,
+                children: List.generate(newsSource.length, (index) {
+                  return Center(
+                    child: NewsCard(news: newsSource[index]),
+                  );
+                }))),
         Container(
           child: Text("tab3"),
         ),
@@ -236,6 +244,51 @@ class _HomePageState extends State<HomePage> {
     });
 
     setState(() {});
+  }
+}
+
+class NewsCard extends StatelessWidget {
+  const NewsCard({Key key, this.news}) : super(key: key);
+  final News news;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (BuildContext context) => MyWebView(
+                  title: news.name,
+                  selectedUrl: news.url,
+                )));
+      },
+      child: Card(
+          color: Colors.white,
+          child: Center(
+            child: Container(
+              color: Colors.indigo,
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      //Icon(news.logoUrl, size:90.0, color: textStyle.color),
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.indigo,
+                              image: DecorationImage(
+                                  image: NetworkImage(news.logoUrl),
+                                  fit: BoxFit.fill)),
+                        ),
+                      ),
+
+                      Text(news.name, style: TextStyle(color: Colors.black)),
+                    ]),
+              ),
+            ),
+          )),
+    );
   }
 }
 

@@ -27,6 +27,7 @@ dependencies:
   volume: ^0.1.0
   cloud_audio_player: ^0.0.2
   shared_preferences: ^0.5.3+5
+  webview_flutter: ^0.3.15+1
 
 dev_dependencies:
   flutter_test:
