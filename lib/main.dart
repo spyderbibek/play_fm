@@ -1,28 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:play_fm/utils/ThemeNotifier.dart';
-import 'package:play_fm/utils/constants.dart';
-import 'package:provider/provider.dart';
-import 'screens/home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  SharedPreferences.getInstance().then((prefs) {
-    var darkModeOn = prefs.getBool('darkMode') ?? true;
-    runApp(ChangeNotifierProvider<ThemeNotifier>(
-      builder: (_) => ThemeNotifier(darkModeOn ? darkTheme : lightTheme),
-      child: MyApp(),
-    ));
-  });
-}
+import 'screens/home_page.dart';
+
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-
     return MaterialApp(
       title: 'Play FM',
-      theme: themeNotifier.getTheme(),
+      theme: ThemeData.dark().copyWith(
+        primaryColor: Color(0xFF2B159E),
+        scaffoldBackgroundColor: Color(0xFF2B159E),
+      ),
       home: HomePage(),
       debugShowCheckedModeBanner: false,
     );

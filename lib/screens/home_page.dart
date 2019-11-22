@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:play_fm/model/radio_model.dart';
 import 'package:play_fm/screens/player_screen.dart';
-import 'package:play_fm/utils/ThemeNotifier.dart';
 import 'package:play_fm/utils/constants.dart';
 import 'package:play_fm/utils/webservice.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -21,9 +18,6 @@ class _HomePageState extends State<HomePage> {
   TextEditingController searchController = TextEditingController();
   List<RadioModel> _searchResult = [];
   List<RadioModel> _radioDetails = [];
-  var _darkTheme = true;
-
-  bool _value1 = false;
 
   @override
   void initState() {
@@ -45,9 +39,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
-
     return DefaultTabController(
       length: 4,
       child: Scaffold(
@@ -211,39 +202,12 @@ class _HomePageState extends State<HomePage> {
               child: Text("tab3"),
             ),
             Container(
-              child: ListView(
-                children: <Widget>[
-                  ListTile(
-                    title: Text("Dark Theme"),
-                    contentPadding: const EdgeInsets.only(left: 16.0),
-                    trailing: Transform.scale(
-                      scale: 0.4,
-                      child: Switch(
-                        value: _darkTheme,
-                        onChanged: (val) {
-                          setState(() {
-                            _darkTheme = val;
-                          });
-                          onThemeChanged(val, themeNotifier);
-                        },
-                      ),
-                    ),
-                  )
-                ],
-              ),
+              child: Text("tab4"),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void onThemeChanged(bool value, ThemeNotifier themeNotifier) async {
-    (value)
-        ? themeNotifier.setTheme(customTheme)
-        : themeNotifier.setTheme(lightTheme);
-    var prefs = await SharedPreferences.getInstance();
-    prefs.setBool('darkMode', value);
   }
 
   onSearchTextChanged(String text) async {
